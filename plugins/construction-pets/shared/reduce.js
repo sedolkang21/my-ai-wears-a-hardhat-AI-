@@ -101,7 +101,18 @@
     return 'night';
   }
 
+  // 'constructor'나 '__proto__' 같은 이름이 건물·펫·작업의 열쇠로 들어오면 빈 객체에서도 "있는 것"으로 보인다.
+  // 그런 이름에는 밑줄을 붙여 평범한 열쇠로 만든다.
+  var KEYS = ['file', 'session', 'agent', 'id'];
+  function safeKeys(ev) {
+    for (var i = 0; i < KEYS.length; i++) {
+      var v = ev[KEYS[i]];
+      if (typeof v === 'string' && v in Object.prototype) ev[KEYS[i]] = v + '_';
+    }
+  }
+
   function apply(site, ev) {
+    safeKeys(ev);
     site.updatedAt = ev.ts || site.updatedAt;
     var pet, b, id;
     switch (ev.type) {

@@ -85,7 +85,7 @@
     // 한 단계 올라갈 때 살짝 늘어났다 돌아온다(바닥은 땅에 붙어 있다)
     g.drawImage(b._cv, 0, 0, tw, th, dx, gy - th - bounce, tw, th + bounce);
     var x0 = Math.round(x - L.bw / 2), top = gy - 3 - n * FH - bounce;
-    drawFlags(g, b, x0, top, L.bw);
+    drawFlags(g, b, x0, top, L.bw, env.reduced);
     if (b.done && !b.rebuilt && L.roofType === 1 && !env.reduced) { // 굴뚝 연기
       var cxm = x0 + L.bw - 8, cym = top - Math.floor((L.bw + 2) / 4) - 5;
       for (var s = 0; s < 3; s++) {
@@ -378,13 +378,13 @@
     if (env.season === 'winter') { R(g, x0 - 7, top - 5, bw + 14, 1, '#f4f7fa'); }
   }
 
-  function drawFlags(g, b, x0, top, bw) {
+  function drawFlags(g, b, x0, top, bw, still) {
     if (!b.flags || b.vis < 3) return;
     var n = Math.min(b.flags, 5), ry = top - (b.vis >= 4 ? roofTop(b) : 2);
     for (var i = 0; i < n; i++) {
       var fx = x0 + 3 + i * Math.floor((bw - 6) / 5);
       R(g, fx, ry - 7, 1, 7, '#6c727a');
-      var wave = Math.floor((b.clock || 0) * 3 + i) % 2;
+      var wave = still ? 0 : Math.floor((b.clock || 0) * 3 + i) % 2;
       R(g, fx + 1, ry - 7 + wave, 4, 3, FLAGS[i % FLAGS.length]);
       R(g, fx + 1, ry - 7 + wave, 4, 1, CP.shade(FLAGS[i % FLAGS.length], 0.3));
     }
@@ -621,7 +621,7 @@
       R(g, x + 2, ty - 16, 1, 7, colD);
       for (k = 1; k < 18; k++) { R(g, x + 2 + k * 2, ty - 16 + Math.round(k * 0.7), 1, 1, colD); if (k < 10) R(g, x + 2 - k * 2, ty - 16 + Math.round(k * 1.3), 1, 1, colD); }
       if (env.night > 0.5 && Math.floor(env.t * 1.2 + i) % 2) R(g, x + 2, ty - 17, 1, 1, 'rgba(255,110,110,0.95)');
-      var busy = env.craneBusy, sp = busy ? 1.6 : 0.25;
+      var busy = env.craneBusy, sp = env.reduced ? 0 : busy ? 1.6 : 0.25;
       var tx = x + 22 + Math.round(Math.sin(env.t * sp + i) * 20);
       var len = 18 + Math.round((Math.sin(env.t * sp * 1.3 + i * 2) + 1) * (busy ? 16 : 6));
       R(g, tx - 2, ty + 1, 5, 2, colD);

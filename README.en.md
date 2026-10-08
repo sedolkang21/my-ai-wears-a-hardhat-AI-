@@ -146,7 +146,7 @@ Phone viewing stays on until you turn it off (same address after restarting the 
 Good to know:
 
 - The phone can only watch. Tapping pets, petting, snacks, throwing, cheering, and sound work; naming, settings, and full file view are PC-only.
-- The address contains a key. Any device that knows it can see the site (file names, the first 10 lines of an edit, the first 60 characters of a prompt). **Turn off phone viewing** removes the address, and turning it on again creates a new key (so the home screen icon has to be added again).
+- The address contains a key. Any device that knows it can see the site (file names, the first 10 lines of an edit, the first 60 characters of a prompt), the pet names, and the birthday (month-day) if you entered one. **Turn off phone viewing** removes the address, and turning it on again creates a new key (so the home screen icon has to be added again).
 - If the router gives the PC a new address (IP), the home screen icon stops working. Scan the QR code again.
 - The connection is unencrypted (http). Turn it on only on Wi-Fi you trust, such as home or office, not on public Wi-Fi.
 - With several adapters (virtual machines, VPN) several addresses are listed. If one does not open, pick another.
@@ -173,7 +173,7 @@ Reload the viewer after editing.
 
 ## Troubleshooting
 
-- **I want to check it on Windows first.** Run `npm test` in the unzipped folder; 26 tests should pass. Tell me the name of any that fails.
+- **I want to check it on Windows first.** Run `npm test` in the unzipped folder; 28 tests should pass. Tell me the name of any that fails.
 - **No window opens.** Open `http://127.0.0.1:47821` in a browser yourself. If only the dedicated window misbehaves, turn off **Settings → Open in its own window** to get a tab like before.
 - **The window opens at an odd size.** Pick a shape in **Settings → Window shape** and it snaps back.
 - **The window shows a welcome or sign-in page first.** That is the browser setting up the separate profile for the first time. Close it and it will not come back. If it keeps appearing, turn off **Open in its own window**.

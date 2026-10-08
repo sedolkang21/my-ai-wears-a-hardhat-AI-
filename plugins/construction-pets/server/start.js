@@ -11,7 +11,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
-const { msg, langOf } = require('./messages.js');
+const { msg, langOf, compareVersions } = require('./messages.js');
+
+// 훅 제한 시간(5초) 안에 반드시 끝낸다.
+setTimeout(() => process.exit(0), 4500).unref();
 
 const VERSION = require('../.claude-plugin/plugin.json').version;
 const HOST = '127.0.0.1';
@@ -61,7 +64,7 @@ async function isOurs() {
   const r = await request('GET', '/health', undefined, 200);
   if (!r) return 'down';
   if (!r.json || r.json.name !== 'construction-pets') return 'foreign';
-  return r.json.version === VERSION ? 'up' : 'old';
+  return compareVersions(VERSION, r.json.version) > 0 ? 'old' : 'up'; // 더 새 서버가 떠 있으면 그대로 쓴다
 }
 
 function readSettings() {

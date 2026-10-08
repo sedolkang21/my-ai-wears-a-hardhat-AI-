@@ -16,7 +16,7 @@
     this.scene = scene;
     this.id = info.id;
     this.info = info;
-    this.ai = cfg.kinds[info.ai] ? info.ai : (info.ai === 'claude' ? 'claude' : 'other');
+    this.ai = Object.prototype.hasOwnProperty.call(cfg.kinds, info.ai) ? info.ai : 'other';
     this.kind = cfg.kinds[this.ai];
     this.p = cfg.personalities[this.kind.personality] || cfg.personalities.craftsman;
     this.sub = info.role === 'sub';
@@ -185,7 +185,7 @@
         if (Math.random() < dt * 5) sc.puff(this.x + this.face * 14, sc.groundY - 10, 1, 'rgba(210,210,215,0.8)');
         break;
       case 'fail':
-        this.face = Math.floor(t * 7) % 2 ? 1 : -1;
+        if (!CP.reducedMotion) this.face = Math.floor(t * 7) % 2 ? 1 : -1;
         this.z = CP.reducedMotion ? 0 : Math.abs(Math.sin(t * 9)) * 2;
         break;
       case 'cheer':

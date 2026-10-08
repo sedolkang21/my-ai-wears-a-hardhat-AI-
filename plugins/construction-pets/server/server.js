@@ -14,7 +14,7 @@ const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
 const { openViewer: launchViewer, cleanSize } = require('./open.js');
-const { msg, langOf, isOpenWord } = require('./messages.js');
+const { msg, langOf, isOpenWord, compareVersions } = require('./messages.js');
 const R = require('../shared/reduce.js');
 const { normalize, relPath, countLines, cut } = require('./normalize.js');
 
@@ -110,7 +110,7 @@ function ingest(ev, siteKey, siteName, absFile) {
   ev.site = site.state.id;
   ev.ts = Date.now();
   site.chain = site.chain.then(async () => {
-    if (ev.type === 'session_start') ev.siteName = siteName || site.state.name;
+    ev.siteName = (ev.type === 'session_start' && siteName) || site.state.name; // 늦게 붙은 뷰어도 이름을 알 수 있게 늘 싣는다
     if (ev.type === 'tool_post' && ev.kind === 'edit' && ev.file) {
       if (absFile) {
         site.files.set(ev.file, absFile);
@@ -284,6 +284,7 @@ function config() {
     seasons: readJson(path.join(ROOT, 'config', 'seasons.json'), null),
     skins: readSkins(),
     prefs: publicPrefs(readPrefs()),
+    lang: lang(), // 언어를 고르지 않았을 때 뷰어가 서버 안내문과 같은 언어를 쓰게 한다
   };
 }
 
@@ -439,8 +440,9 @@ function lanInfo() {
 }
 
 function keyMatches(given) {
-  if (!lan.on || typeof given !== 'string' || given.length !== lan.key.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(lan.key));
+  if (!lan.on || typeof given !== 'string') return false;
+  const a = Buffer.from(given), b = Buffer.from(lan.key);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 function lanHandler(req, res) {
@@ -456,7 +458,7 @@ function lanHandler(req, res) {
   // 한 번 열쇠로 들어오면 그 뒤 요청(스크립트, 이벤트)은 쿠키로 확인한다
   if (keyMatches(fromQuery)) res.cpCookie = `cp_k=${lan.key}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Strict`;
   const p = url.pathname;
-  if (p === '/events') return stream(req, res);
+  if (p === '/events') { res.cpLan = true; return stream(req, res); }
   if (p === '/config') return sendJson(res, 200, { ...config(), url: null, remote: true });
   return serveStatic(res, p);
 }
@@ -477,11 +479,11 @@ function stopLan() {
   const srv = lanServer;
   lanServer = null;
   srv.close();
+  for (const res of clients) if (res.cpLan) { clients.delete(res); try { res.destroy(); } catch { /* 이미 끊김 */ } } // 보고 있던 폰도 끊는다
   if (srv.closeAllConnections) srv.closeAllConnections();
 }
 
 async function setLan(on) {
-  const prefs = readPrefs();
   if (on) {
     if (!lan.on) lan = { on: true, key: crypto.randomBytes(8).toString('hex') };
     if (!(await startLan())) lan = { on: false, key: '' };
@@ -490,6 +492,7 @@ async function setLan(on) {
     lanError = null;
     stopLan();
   }
+  const prefs = readPrefs(); // 기다리는 동안 다른 설정이 저장됐을 수 있어 여기서 다시 읽는다
   prefs.lan = { ...lan };
   try { writePrefs(prefs); } catch { /* 저장이 안 돼도 이번 실행 동안은 동작한다 */ }
   return lanInfo();
@@ -557,10 +560,11 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, await setLan(body.on));
   }
 
-  // 플러그인을 올린 뒤 새 버전의 시작 스크립트가 예전 서버를 내리는 길. 같은 버전이 보낸 요청은 무시한다.
+  // 플러그인을 올린 뒤 새 버전의 시작 스크립트가 예전 서버를 내리는 길.
+  // 더 새 버전이 보낸 요청만 듣는다. 같은 버전이나 예전 버전(아직 예전 플러그인으로 도는 세션)이 보낸 것은 무시한다.
   if (req.method === 'POST' && p === '/quit') {
     const body = await readBody(req);
-    if (!body || typeof body.version !== 'string' || body.version === VERSION) return sendJson(res, 409, { version: VERSION });
+    if (!body || typeof body.version !== 'string' || compareVersions(body.version, VERSION) <= 0) return sendJson(res, 409, { version: VERSION });
     sendJson(res, 200, { bye: VERSION });
     return setTimeout(shutdown, 20);
   }

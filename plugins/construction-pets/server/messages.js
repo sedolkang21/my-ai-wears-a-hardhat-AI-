@@ -46,4 +46,12 @@ function isOpenWord(text) {
   return s.length <= 60 && OPEN_WORDS.some((re) => re.test(s));
 }
 
-module.exports = { msg, langOf, systemLang, isOpenWord };
+// '0.3.1' 같은 버전을 견준다. a가 더 새로우면 양수.
+function compareVersions(a, b) {
+  const pa = String(a || '').split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b || '').split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+  return 0;
+}
+
+module.exports = { msg, langOf, systemLang, isOpenWord, compareVersions };

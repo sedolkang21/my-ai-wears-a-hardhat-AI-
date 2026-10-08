@@ -57,8 +57,9 @@ function appCandidates(platform, env, wsl) {
 
 function cleanSize(size) {
   const w = Math.round(Number(size && size.w)), h = Math.round(Number(size && size.h));
-  if (!(w >= 240 && w <= 6000 && h >= 200 && h <= 4000)) return { ...DEFAULT_SIZE };
-  return { w, h };
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return { ...DEFAULT_SIZE };
+  // 너무 작거나 큰 값은 버리지 않고 가장 가까운 크기로 맞춘다(사용자가 끌어서 줄인 창을 기억해야 한다)
+  return { w: Math.min(6000, Math.max(240, w)), h: Math.min(4000, Math.max(160, h)) };
 }
 
 // 앱 창 인자. profileDir를 주면 전용 프로필로 띄운다: 이미 떠 있는 브라우저에 얹히지 않아서 창 크기가 그대로 먹고,

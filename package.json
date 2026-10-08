@@ -1,6 +1,6 @@
 {
   "name": "construction-pets",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "공사현장 펫 뷰어: Claude Code가 일하는 모습을 펫들의 공사 현장으로 보여준다",
   "scripts": {

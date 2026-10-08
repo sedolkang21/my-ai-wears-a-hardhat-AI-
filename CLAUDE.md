@@ -52,7 +52,7 @@ scripts/build-demo.js                 뷰어를 demo.html 한 파일로 묶는�
 ## 자주 쓰는 명령
 
 ```
-npm test                 서버와 계산 시험 (26개)
+npm test                 서버와 계산 시험 (28개)
 npm run server           서버만 띄우기 -> http://127.0.0.1:47821
 npm run fake             띄워 둔 서버에 가짜 이벤트 재생 (-- --fast 는 4배속, -- --en 은 영어 각본)
 npm run demo             demo.html 다시 만들기
@@ -80,7 +80,7 @@ claude plugin test plugins/construction-pets-button
 - 전용 창은 하나만 둔다. 새 창이 `BroadcastChannel('cp-window')`로 알리면 먼저 떠 있던 창이 스스로 닫힌다.
 - 도트 한 칸의 크기(`CP.app.S`)는 `main.js`의 `resize()`가 창 높이와 너비로 정한다. 띠 모양 창(안쪽 높이 330px 이상)에서 3이 나오게 맞춰 두었다.
 - 건물 그림은 단계가 바뀔 때만 작은 캔버스에 그려 두고 매 프레임에는 찍기만 한다(`world.js`의 `drawBuilding`). 건물에 새 그림을 넣으면 캐시 열쇠(`key`)에 영향을 주는 값도 넣는다.
-- 서버 버전은 `.claude-plugin/plugin.json`의 `version` 하나만 고친다. 시작 스크립트는 떠 있는 서버의 버전이 다르면 `POST /quit`으로 내리고 새로 띄운다.
+- 서버 버전은 `.claude-plugin/plugin.json`의 `version` 하나만 고친다. 시작 스크립트는 떠 있는 서버가 자기보다 예전 버전일 때만 `POST /quit`으로 내리고 새로 띄운다(더 새 서버는 그대로 쓴다). 뷰어는 서버 버전이 바뀌면 스스로 새로 고친다.
 - 포트는 47821(PC)과 47822(폰에서 보기)로 고정이다. `hooks.json`에 주소를 적어야 하기 때문이다. 시험에서는 `CONSTRUCTION_PETS_PORT`, `CONSTRUCTION_PETS_LAN_PORT`로 바꾼다.
 - 폰으로 들어온 뷰어는 `/config`의 `remote: true`로 구분한다. 그 화면에서는 설정과 이름을 바꾸지 못한다.
 - `shared/qr.js`는 OpenCV로 해독해 확인했다. 고치면 다시 해독해 보고 `test/logic.test.js`의 지문을 바꾼다.

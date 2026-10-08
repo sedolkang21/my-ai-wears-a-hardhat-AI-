@@ -296,7 +296,7 @@
   }
 
   function addSkin(name, def) {
-    if (!def || !Array.isArray(def.body) || !Array.isArray(def.legs) || !def.legs.length) return false;
+    if (!def || !Array.isArray(def.body) || !def.body.length || typeof def.body[0] !== 'string' || !Array.isArray(def.legs) || !def.legs.length || !Array.isArray(def.legs[0])) return false;
     var w = def.body[0].length;
     SPECIES[name] = {
       w: w, h: def.body.length + def.legs[0].length, legRow: def.body.length, cx: Math.floor(w / 2),

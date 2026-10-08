@@ -243,7 +243,7 @@ test('디스크에는 펫 이름과 설정만 남긴다', async () => {
     const bad = await req(s.port, 'POST', '/prefs', { settings: { lang: 'xx', appWindow: 'yes', win: { preset: '<b>', w: 5, h: 99999 } } });
     assert.equal(bad.json.settings.lang, 'en', '모르는 언어는 무시한다');
     assert.equal(bad.json.settings.appWindow, false);
-    assert.deepEqual(bad.json.settings.win, { preset: '', w: 1280, h: 400 }, '말이 안 되는 크기는 기본 크기로 돌린다');
+    assert.deepEqual(bad.json.settings.win, { preset: '', w: 240, h: 4000 }, '범위를 벗어난 크기는 가장 가까운 크기로 맞춘다');
 
     await req(s.port, 'POST', '/hook/UserPromptSubmit', { session_id: 's1', cwd: '/p', prompt: 'TOP-SECRET-PROMPT' });
     await sleep(100);
@@ -333,8 +333,10 @@ test('플러그인을 올리면 시작 스크립트가 예전 버전 서버를 �
     const health = (await req(port, 'GET', '/health')).json;
     assert.equal(health.version, version, '새 버전 서버가 떠 있다');
     assert.equal(health.sessions, 1);
-    // 같은 버전끼리는 내리지 않는다
+    // 같은 버전이나 예전 버전은 서버를 내리지 못한다(예전 플러그인으로 도는 세션이 새 서버를 끌어내리지 않게)
     assert.equal((await req(port, 'POST', '/quit', { version })).status, 409);
+    assert.equal((await req(port, 'POST', '/quit', { version: '0.0.1' })).status, 409);
+    assert.equal((await req(port, 'POST', '/quit', {})).status, 409);
     assert.equal((await req(port, 'GET', '/health')).status, 200);
   } finally {
     await req(port, 'POST', '/hook/SessionEnd', { session_id: 'up', cwd: '/tmp/p', reason: 'other' }).catch(() => {});

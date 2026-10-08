@@ -158,6 +158,8 @@
     }
     document.documentElement.lang = lang;
     document.title = t('title');
+    var meta = document.querySelector && document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (meta) meta.setAttribute('content', t('site.default')); // 폰 홈 화면 아이콘 이름
   }
 
   function set(next, quiet) {

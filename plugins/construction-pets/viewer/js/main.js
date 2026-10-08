@@ -89,6 +89,7 @@
     var es = new EventSource('events');
     es.addEventListener('snapshot', function (m) {
       var snap = JSON.parse(m.data), keep = app.scene && app.scene.id;
+      if (snap.version && app.config.version && snap.version !== app.config.version) { location.reload(); return; } // 서버가 다른 버전으로 바뀌었다
       clearScenes();
       (snap.sites || []).forEach(function (s) { addScene(s); });
       if (!app.sites.length) placeholder();
@@ -103,7 +104,7 @@
       app.prefs = JSON.parse(m.data); dateStamp = 0;
       if (!app.prefs.names) app.prefs.names = {};
       if (!app.prefs.settings) app.prefs.settings = {};
-      CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang, app.remote)); // 다른 창에서 언어를 바꿨을 수 있다
+      CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang || (app.remote ? '' : app.config.lang), app.remote)); // 다른 창에서 언어를 바꿨을 수 있다
       CP.ui.syncSettings();
       if (app.scene) app.scene.dirty = true;
     });
@@ -112,10 +113,10 @@
 
   function resize() {
     var vw = Math.max(200, window.innerWidth), vh = Math.max(160, window.innerHeight);
-    // 도트 한 칸의 크기. 세로로는 장면이 110칸 넘게 보이게, 가로로는 넓은 창에서 260칸 넘게 보이게 맞춘다.
+    // 도트 한 칸의 크기. 세로로는 장면이 110칸 넘게 보이게, 가로로는 넓은 창에서 260칸 넘게 보이게 맞춘다(좁은 창은 3까지).
     // 그래서 가로로 긴 띠 모양 창에서도 펫이 작아지지 않고, 세로로 긴 폰 화면에서도 건물이 잘리지 않는다.
     var S = CP.clamp(Math.floor(vh / 110), 2, 6);
-    S = Math.max(1, Math.min(S, vw >= 600 ? Math.max(2, Math.floor(vw / 260)) : Math.floor(vw / 124)));
+    S = Math.max(1, Math.min(S, Math.max(Math.floor(vw / 260), Math.min(3, Math.floor(vw / 124)))));
     app.S = S; app.W = env.W = Math.ceil(vw / S); app.H = env.H = Math.ceil(vh / S);
     canvas.width = wc.width = app.W; canvas.height = wc.height = app.H;
     canvas.style.width = app.W * S + 'px'; canvas.style.height = app.H * S + 'px';
@@ -191,10 +192,10 @@
     app.prefs = live ? (cfg.prefs || app.prefs) : CP.store.get('prefs', { names: {}, settings: {} });
     if (!app.prefs.names) app.prefs.names = {};
     if (!app.prefs.settings) app.prefs.settings = {};
-    CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang, !live || app.remote), true);
+    CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang || (live && !app.remote ? cfg.lang : ''), !live || app.remote), true);
     try { app.standalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches; } catch (e) { app.standalone = false; }
     var skins = cfg.skins || {};
-    for (var name in skins) CP.sprites.addSkin(name, skins[name]);
+    for (var name in skins) { try { CP.sprites.addSkin(name, skins[name]); } catch (e) { /* 잘못된 스킨은 건너뛴다 */ } }
 
     var q = new URLSearchParams(location.search), hash = (location.hash || '').slice(1);
     var date = q.get('date') || (/^\d{4}-\d\d-\d\d$/.test(hash) ? hash : null);
@@ -206,6 +207,8 @@
     window.addEventListener('resize', resize);
     document.addEventListener('visibilitychange', function () { last = performance.now(); CP.audio.pause(document.hidden); });
     CP.ui.init();
+    app.relayout = resize;
+    resize(); // 버튼이 다 놓인 뒤의 조작부 높이로 다시 맞춘다
     homeIcon();
     if (!live || q.get('demo') === '1' || hash === 'demo') startDemo(); else connect();
     if (live && !app.remote && app.standalone) oneWindow();
@@ -240,6 +243,7 @@
   }
 
   function start() {
+    CP.i18n.set(CP.i18n.resolve('', true), true); // 설정을 받기 전에도 이 기기의 언어로 보여 준다
     if (window.CP_BOOT) return boot(window.CP_BOOT, false); // 서버 없이 여는 데모 파일
     var tries = 0;
     (function load() {
@@ -247,7 +251,7 @@
         if (!cfg || !cfg.pets) throw new Error('bad config');
         boot(cfg, true);
       }).catch(function () {
-        document.getElementById('status-text').textContent = CP.i18n.auto() === 'ko' ? '서버를 기다리는 중' : 'Waiting for the server';
+        document.getElementById('status-text').textContent = CP.t('status.wait');
         if (tries++ < 200) setTimeout(load, 3000);
       });
     })();

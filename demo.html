@@ -476,7 +476,18 @@ button { -webkit-appearance: none; appearance: none; }
     return 'night';
   }
 
+  // 'constructor'나 '__proto__' 같은 이름이 건물·펫·작업의 열쇠로 들어오면 빈 객체에서도 "있는 것"으로 보인다.
+  // 그런 이름에는 밑줄을 붙여 평범한 열쇠로 만든다.
+  var KEYS = ['file', 'session', 'agent', 'id'];
+  function safeKeys(ev) {
+    for (var i = 0; i < KEYS.length; i++) {
+      var v = ev[KEYS[i]];
+      if (typeof v === 'string' && v in Object.prototype) ev[KEYS[i]] = v + '_';
+    }
+  }
+
   function apply(site, ev) {
+    safeKeys(ev);
     site.updatedAt = ev.ts || site.updatedAt;
     var pet, b, id;
     switch (ev.type) {
@@ -1096,6 +1107,8 @@ button { -webkit-appearance: none; appearance: none; }
     }
     document.documentElement.lang = lang;
     document.title = t('title');
+    var meta = document.querySelector && document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (meta) meta.setAttribute('content', t('site.default')); // 폰 홈 화면 아이콘 이름
   }
 
   function set(next, quiet) {
@@ -1424,7 +1437,7 @@ button { -webkit-appearance: none; appearance: none; }
   }
 
   function addSkin(name, def) {
-    if (!def || !Array.isArray(def.body) || !Array.isArray(def.legs) || !def.legs.length) return false;
+    if (!def || !Array.isArray(def.body) || !def.body.length || typeof def.body[0] !== 'string' || !Array.isArray(def.legs) || !def.legs.length || !Array.isArray(def.legs[0])) return false;
     var w = def.body[0].length;
     SPECIES[name] = {
       w: w, h: def.body.length + def.legs[0].length, legRow: def.body.length, cx: Math.floor(w / 2),
@@ -2009,7 +2022,7 @@ button { -webkit-appearance: none; appearance: none; }
     // 한 단계 올라갈 때 살짝 늘어났다 돌아온다(바닥은 땅에 붙어 있다)
     g.drawImage(b._cv, 0, 0, tw, th, dx, gy - th - bounce, tw, th + bounce);
     var x0 = Math.round(x - L.bw / 2), top = gy - 3 - n * FH - bounce;
-    drawFlags(g, b, x0, top, L.bw);
+    drawFlags(g, b, x0, top, L.bw, env.reduced);
     if (b.done && !b.rebuilt && L.roofType === 1 && !env.reduced) { // 굴뚝 연기
       var cxm = x0 + L.bw - 8, cym = top - Math.floor((L.bw + 2) / 4) - 5;
       for (var s = 0; s < 3; s++) {
@@ -2302,13 +2315,13 @@ button { -webkit-appearance: none; appearance: none; }
     if (env.season === 'winter') { R(g, x0 - 7, top - 5, bw + 14, 1, '#f4f7fa'); }
   }
 
-  function drawFlags(g, b, x0, top, bw) {
+  function drawFlags(g, b, x0, top, bw, still) {
     if (!b.flags || b.vis < 3) return;
     var n = Math.min(b.flags, 5), ry = top - (b.vis >= 4 ? roofTop(b) : 2);
     for (var i = 0; i < n; i++) {
       var fx = x0 + 3 + i * Math.floor((bw - 6) / 5);
       R(g, fx, ry - 7, 1, 7, '#6c727a');
-      var wave = Math.floor((b.clock || 0) * 3 + i) % 2;
+      var wave = still ? 0 : Math.floor((b.clock || 0) * 3 + i) % 2;
       R(g, fx + 1, ry - 7 + wave, 4, 3, FLAGS[i % FLAGS.length]);
       R(g, fx + 1, ry - 7 + wave, 4, 1, CP.shade(FLAGS[i % FLAGS.length], 0.3));
     }
@@ -2545,7 +2558,7 @@ button { -webkit-appearance: none; appearance: none; }
       R(g, x + 2, ty - 16, 1, 7, colD);
       for (k = 1; k < 18; k++) { R(g, x + 2 + k * 2, ty - 16 + Math.round(k * 0.7), 1, 1, colD); if (k < 10) R(g, x + 2 - k * 2, ty - 16 + Math.round(k * 1.3), 1, 1, colD); }
       if (env.night > 0.5 && Math.floor(env.t * 1.2 + i) % 2) R(g, x + 2, ty - 17, 1, 1, 'rgba(255,110,110,0.95)');
-      var busy = env.craneBusy, sp = busy ? 1.6 : 0.25;
+      var busy = env.craneBusy, sp = env.reduced ? 0 : busy ? 1.6 : 0.25;
       var tx = x + 22 + Math.round(Math.sin(env.t * sp + i) * 20);
       var len = 18 + Math.round((Math.sin(env.t * sp * 1.3 + i * 2) + 1) * (busy ? 16 : 6));
       R(g, tx - 2, ty + 1, 5, 2, colD);
@@ -2814,7 +2827,7 @@ button { -webkit-appearance: none; appearance: none; }
     this.scene = scene;
     this.id = info.id;
     this.info = info;
-    this.ai = cfg.kinds[info.ai] ? info.ai : (info.ai === 'claude' ? 'claude' : 'other');
+    this.ai = Object.prototype.hasOwnProperty.call(cfg.kinds, info.ai) ? info.ai : 'other';
     this.kind = cfg.kinds[this.ai];
     this.p = cfg.personalities[this.kind.personality] || cfg.personalities.craftsman;
     this.sub = info.role === 'sub';
@@ -2983,7 +2996,7 @@ button { -webkit-appearance: none; appearance: none; }
         if (Math.random() < dt * 5) sc.puff(this.x + this.face * 14, sc.groundY - 10, 1, 'rgba(210,210,215,0.8)');
         break;
       case 'fail':
-        this.face = Math.floor(t * 7) % 2 ? 1 : -1;
+        if (!CP.reducedMotion) this.face = Math.floor(t * 7) % 2 ? 1 : -1;
         this.z = CP.reducedMotion ? 0 : Math.abs(Math.sin(t * 9)) * 2;
         break;
       case 'cheer':
@@ -3848,7 +3861,6 @@ button { -webkit-appearance: none; appearance: none; }
   function setTab(name) {
     ['site', 'pets', 'settings'].forEach(function (k) {
       $('tab-' + k).setAttribute('aria-selected', String(k === name));
-      $('tab-' + k).tabIndex = k === name ? 0 : -1;
       $('pane-' + k).hidden = k !== name;
     });
     CP.store.set('tab', name);
@@ -4050,6 +4062,7 @@ button { -webkit-appearance: none; appearance: none; }
     if (signEl) signEl.dataset.t = '';
     status(statusKey[0], statusKey[1]);
     dateChips(); syncSettings(); lanRender(lanInfo);
+    if (CP.app.relayout) CP.app.relayout();
     if (card.pet) openCard(card.pet);
     if (scene()) scene().dirty = true;
   }
@@ -4097,7 +4110,8 @@ button { -webkit-appearance: none; appearance: none; }
     if (performance.now() < winQuiet || document.fullscreenElement) return;
     clearTimeout(winTimer);
     winTimer = setTimeout(function () {
-      if (performance.now() < winQuiet || document.fullscreenElement) return;
+      if (performance.now() < winQuiet || document.fullscreenElement || document.hidden) return;
+      if (window.outerWidth < 240 || window.outerHeight < 160) return; // 최소화된 창의 크기는 기억하지 않는다
       var win = { preset: '', w: window.outerWidth, h: window.outerHeight };
       var old = CP.app.prefs.settings.win || {};
       if (Math.abs((old.w || 0) - win.w) < 3 && Math.abs((old.h || 0) - win.h) < 3) return;
@@ -4164,7 +4178,7 @@ button { -webkit-appearance: none; appearance: none; }
     if (!open) return;
     closeCard(); $('panel').hidden = true; $('btn-detail').setAttribute('aria-pressed', 'false');
     if (!CP.app.live) { lanRender({ on: false, urls: [], demo: true }); return; }
-    if (lanInfo.on) { lanRender(); return; }
+    if (lanInfo.on) { lanRender(); fetch('lan').then(function (r) { return r.json(); }).then(lanRender).catch(function () {}); return; }
     lanRender({ on: false, urls: [], pending: true });
     lanPost(true); // 버튼 한 번에 켜고 바로 QR을 보여 준다
     wake();
@@ -4567,6 +4581,7 @@ button { -webkit-appearance: none; appearance: none; }
     var es = new EventSource('events');
     es.addEventListener('snapshot', function (m) {
       var snap = JSON.parse(m.data), keep = app.scene && app.scene.id;
+      if (snap.version && app.config.version && snap.version !== app.config.version) { location.reload(); return; } // 서버가 다른 버전으로 바뀌었다
       clearScenes();
       (snap.sites || []).forEach(function (s) { addScene(s); });
       if (!app.sites.length) placeholder();
@@ -4581,7 +4596,7 @@ button { -webkit-appearance: none; appearance: none; }
       app.prefs = JSON.parse(m.data); dateStamp = 0;
       if (!app.prefs.names) app.prefs.names = {};
       if (!app.prefs.settings) app.prefs.settings = {};
-      CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang, app.remote)); // 다른 창에서 언어를 바꿨을 수 있다
+      CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang || (app.remote ? '' : app.config.lang), app.remote)); // 다른 창에서 언어를 바꿨을 수 있다
       CP.ui.syncSettings();
       if (app.scene) app.scene.dirty = true;
     });
@@ -4590,10 +4605,10 @@ button { -webkit-appearance: none; appearance: none; }
 
   function resize() {
     var vw = Math.max(200, window.innerWidth), vh = Math.max(160, window.innerHeight);
-    // 도트 한 칸의 크기. 세로로는 장면이 110칸 넘게 보이게, 가로로는 넓은 창에서 260칸 넘게 보이게 맞춘다.
+    // 도트 한 칸의 크기. 세로로는 장면이 110칸 넘게 보이게, 가로로는 넓은 창에서 260칸 넘게 보이게 맞춘다(좁은 창은 3까지).
     // 그래서 가로로 긴 띠 모양 창에서도 펫이 작아지지 않고, 세로로 긴 폰 화면에서도 건물이 잘리지 않는다.
     var S = CP.clamp(Math.floor(vh / 110), 2, 6);
-    S = Math.max(1, Math.min(S, vw >= 600 ? Math.max(2, Math.floor(vw / 260)) : Math.floor(vw / 124)));
+    S = Math.max(1, Math.min(S, Math.max(Math.floor(vw / 260), Math.min(3, Math.floor(vw / 124)))));
     app.S = S; app.W = env.W = Math.ceil(vw / S); app.H = env.H = Math.ceil(vh / S);
     canvas.width = wc.width = app.W; canvas.height = wc.height = app.H;
     canvas.style.width = app.W * S + 'px'; canvas.style.height = app.H * S + 'px';
@@ -4669,10 +4684,10 @@ button { -webkit-appearance: none; appearance: none; }
     app.prefs = live ? (cfg.prefs || app.prefs) : CP.store.get('prefs', { names: {}, settings: {} });
     if (!app.prefs.names) app.prefs.names = {};
     if (!app.prefs.settings) app.prefs.settings = {};
-    CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang, !live || app.remote), true);
+    CP.i18n.set(CP.i18n.resolve(app.prefs.settings.lang || (live && !app.remote ? cfg.lang : ''), !live || app.remote), true);
     try { app.standalone = window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches; } catch (e) { app.standalone = false; }
     var skins = cfg.skins || {};
-    for (var name in skins) CP.sprites.addSkin(name, skins[name]);
+    for (var name in skins) { try { CP.sprites.addSkin(name, skins[name]); } catch (e) { /* 잘못된 스킨은 건너뛴다 */ } }
 
     var q = new URLSearchParams(location.search), hash = (location.hash || '').slice(1);
     var date = q.get('date') || (/^\d{4}-\d\d-\d\d$/.test(hash) ? hash : null);
@@ -4684,6 +4699,8 @@ button { -webkit-appearance: none; appearance: none; }
     window.addEventListener('resize', resize);
     document.addEventListener('visibilitychange', function () { last = performance.now(); CP.audio.pause(document.hidden); });
     CP.ui.init();
+    app.relayout = resize;
+    resize(); // 버튼이 다 놓인 뒤의 조작부 높이로 다시 맞춘다
     homeIcon();
     if (!live || q.get('demo') === '1' || hash === 'demo') startDemo(); else connect();
     if (live && !app.remote && app.standalone) oneWindow();
@@ -4718,6 +4735,7 @@ button { -webkit-appearance: none; appearance: none; }
   }
 
   function start() {
+    CP.i18n.set(CP.i18n.resolve('', true), true); // 설정을 받기 전에도 이 기기의 언어로 보여 준다
     if (window.CP_BOOT) return boot(window.CP_BOOT, false); // 서버 없이 여는 데모 파일
     var tries = 0;
     (function load() {
@@ -4725,7 +4743,7 @@ button { -webkit-appearance: none; appearance: none; }
         if (!cfg || !cfg.pets) throw new Error('bad config');
         boot(cfg, true);
       }).catch(function () {
-        document.getElementById('status-text').textContent = CP.i18n.auto() === 'ko' ? '서버를 기다리는 중' : 'Waiting for the server';
+        document.getElementById('status-text').textContent = CP.t('status.wait');
         if (tries++ < 200) setTimeout(load, 3000);
       });
     })();

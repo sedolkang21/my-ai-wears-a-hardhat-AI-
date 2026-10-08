@@ -194,6 +194,27 @@ test('영어 각본도 같은 결말에 이른다', () => {
   assert.ok(!/[가-힣]/.test(text), '영어 각본에 한글이 남아 있다');
 });
 
+test('이상한 이름의 파일과 세션도 상태를 깨지 않는다', () => {
+  const st = R.newSite('x', 'x');
+  R.apply(st, { type: 'session_start', session: 'constructor', ai: 'claude', ts: 1 });
+  for (const file of ['constructor', '__proto__', 'toString', 'src/ok.js']) {
+    R.apply(st, { type: 'tool_post', session: 'constructor', kind: 'edit', tool: 'Write', file, lines: 3, gain: 1, isNew: true, ts: 2 });
+  }
+  assert.equal(st.order.length, 4);
+  for (const p of st.order) assert.equal(typeof st.buildings[p].stage, 'number', p);
+  assert.equal(Object.keys(st.pets).length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(st)).order, st.order, '뷰어로 보낼 수 있는 평범한 JSON이다');
+});
+
+test('버전 견주기', () => {
+  const { compareVersions } = require(path.join(PLUGIN, 'server', 'messages.js'));
+  assert.ok(compareVersions('0.3.1', '0.3.0') > 0);
+  assert.ok(compareVersions('0.3.0', '0.3.1') < 0);
+  assert.ok(compareVersions('0.10.0', '0.9.9') > 0);
+  assert.equal(compareVersions('1.2.3', '1.2.3'), 0);
+  assert.ok(compareVersions('0.3.1', undefined) > 0);
+});
+
 test('안내문과 여는 말: 한국어와 영어', () => {
   const { msg, langOf, systemLang, isOpenWord } = require(path.join(PLUGIN, 'server', 'messages.js'));
   assert.equal(langOf({ lang: 'en' }, { LANG: 'ko_KR.UTF-8' }), 'en', '설정이 먼저다');
@@ -223,7 +244,9 @@ test('전용 창: 브라우저를 찾고, 창 크기와 전용 프로필을 인�
   assert.ok(!appArgs(url, null, null).some((a) => a.startsWith('--user-data-dir')));
   assert.deepEqual(cleanSize(null), DEFAULT_SIZE);
   assert.deepEqual(cleanSize({ w: '900', h: 300.6 }), { w: 900, h: 301 });
-  assert.deepEqual(cleanSize({ w: 10, h: 10 }), DEFAULT_SIZE);
+  assert.deepEqual(cleanSize({ w: 10, h: 10 }), { w: 240, h: 160 }, '너무 작으면 기본값이 아니라 가장 작은 크기로 맞춘다');
+  assert.deepEqual(cleanSize({ w: 99999, h: 180 }), { w: 6000, h: 180 });
+  assert.deepEqual(cleanSize({ w: 'x', h: 300 }), DEFAULT_SIZE);
   assert.ok(DEFAULT_SIZE.w / DEFAULT_SIZE.h >= 3, '기본은 가로로 긴 창이다');
 });
 

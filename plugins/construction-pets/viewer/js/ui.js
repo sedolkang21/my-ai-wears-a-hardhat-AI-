@@ -275,7 +275,6 @@
   function setTab(name) {
     ['site', 'pets', 'settings'].forEach(function (k) {
       $('tab-' + k).setAttribute('aria-selected', String(k === name));
-      $('tab-' + k).tabIndex = k === name ? 0 : -1;
       $('pane-' + k).hidden = k !== name;
     });
     CP.store.set('tab', name);
@@ -477,6 +476,7 @@
     if (signEl) signEl.dataset.t = '';
     status(statusKey[0], statusKey[1]);
     dateChips(); syncSettings(); lanRender(lanInfo);
+    if (CP.app.relayout) CP.app.relayout();
     if (card.pet) openCard(card.pet);
     if (scene()) scene().dirty = true;
   }
@@ -524,7 +524,8 @@
     if (performance.now() < winQuiet || document.fullscreenElement) return;
     clearTimeout(winTimer);
     winTimer = setTimeout(function () {
-      if (performance.now() < winQuiet || document.fullscreenElement) return;
+      if (performance.now() < winQuiet || document.fullscreenElement || document.hidden) return;
+      if (window.outerWidth < 240 || window.outerHeight < 160) return; // 최소화된 창의 크기는 기억하지 않는다
       var win = { preset: '', w: window.outerWidth, h: window.outerHeight };
       var old = CP.app.prefs.settings.win || {};
       if (Math.abs((old.w || 0) - win.w) < 3 && Math.abs((old.h || 0) - win.h) < 3) return;
@@ -591,7 +592,7 @@
     if (!open) return;
     closeCard(); $('panel').hidden = true; $('btn-detail').setAttribute('aria-pressed', 'false');
     if (!CP.app.live) { lanRender({ on: false, urls: [], demo: true }); return; }
-    if (lanInfo.on) { lanRender(); return; }
+    if (lanInfo.on) { lanRender(); fetch('lan').then(function (r) { return r.json(); }).then(lanRender).catch(function () {}); return; }
     lanRender({ on: false, urls: [], pending: true });
     lanPost(true); // 버튼 한 번에 켜고 바로 QR을 보여 준다
     wake();
