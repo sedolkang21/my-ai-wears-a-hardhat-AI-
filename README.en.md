@@ -171,31 +171,6 @@ Short events are layered over long seasonal backdrops, by the PC date.
 
 Reload the viewer after editing.
 
-## What was tested and what was not
-
-0.3.0, 2026-10-08. Checked with Claude Code v2.1.294 on Linux.
-0.2.0 was run on Windows by its user (up to the viewer opening in a browser). What is new in 0.3.0 has not been run on Windows yet.
-
-| Item | Status |
-| --- | --- |
-| 26 server and logic tests (`npm test`) | Pass (Linux) |
-| Upgrade from 0.2.0 to 0.3.0 (`marketplace update` → `plugin update`) | Checked (in a separate config folder) |
-| 4 button mod tests (`claude plugin test`), terminal and desktop surfaces | Pass |
-| Plugin validation (`claude plugin validate`) for the plugin, the button, and the marketplace | Pass |
-| Dedicated window: opens as a strip, earlier window closes on reopen, window shapes, remembers a dragged size | Checked (Chromium on Linux, virtual display) |
-| Dedicated window: the same on Windows with Edge or Chrome | Not yet. Browser paths and arguments pass logic tests only |
-| One Phone button shows the QR code, QR decodes, phone-sized touch browser connects, rejected without the key, closed when turned off | Checked (with an emulated phone browser, not a real phone over Wi-Fi) |
-| Reopening from an icon added to the phone home screen | Not yet |
-| Korean/English: key parity, switching, server messages, English open words | Checked |
-| Viewer screens (fake events, headless Chromium, strip, 16:9 and phone sizes, light and dark themes, seasons and events) | Checked. About 2 ms per frame on average |
-| In real Claude Code: session start hook, blocking the open word (0 turns, 0 tokens), session end hook and auto shutdown | Checked in 0.2.0. In 0.3.0 only the same tests were rerun |
-| QR code | Decoded with OpenCV (address length 1–106 bytes) |
-| Tool hooks during a real model turn (PreToolUse, PostToolUse, …) all the way to the screen | Not run directly. The same path is covered by fake events and tests |
-| Real runs on macOS, the desktop app, IDE extensions | Not yet |
-| Whether the Windows firewall prompt actually appears | Not yet |
-| Sound | Checked only for code errors, not by ear |
-| Other AI CLIs | Not built. The robot and cloud pets appear only through fake events |
-
 ## Troubleshooting
 
 - **I want to check it on Windows first.** Run `npm test` in the unzipped folder; 26 tests should pass. Tell me the name of any that fails.
