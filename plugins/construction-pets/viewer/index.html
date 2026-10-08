@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공사현장 펫 뷰어</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='5' y='1' width='6' height='1' fill='%23f2c230'/%3E%3Crect x='3' y='2' width='10' height='3' fill='%23f2c230'/%3E%3Crect x='1' y='5' width='14' height='1' fill='%23c2941f'/%3E%3Crect x='2' y='6' width='12' height='6' fill='%23d97757'/%3E%3Crect x='5' y='7' width='1' height='2' fill='%232b2433'/%3E%3Crect x='10' y='7' width='1' height='2' fill='%232b2433'/%3E%3Crect x='2' y='12' width='2' height='3' fill='%23d97757'/%3E%3Crect x='5' y='12' width='2' height='3' fill='%23d97757'/%3E%3Crect x='9' y='12' width='2' height='3' fill='%23d97757'/%3E%3Crect x='12' y='12' width='2' height='3' fill='%23d97757'/%3E%3C/svg%3E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="공사현장">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2b2a3a">
+<!--CP:HEAD-START-->
+<style>
+/* 배치: 픽셀 공사장이 화면을 가득 채우고, 조작부는 도트 모서리의 작은 판으로 가장자리에 붙는다.
+   판의 테두리는 border 대신 네 방향 그림자로 그려서 모서리 한 칸이 빈 "도트 둥근 모서리"가 된다. */
+:root {
+  --paper: #f8f3e4;
+  --paper-2: #ebe3cc;
+  --paper-3: #dcd2b6;
+  --ink: #2b2a3a;
+  --ink-soft: #6a677a;
+  --line: #2b2a3a;
+  --tape: #f2c230;      /* 안전 테이프 노랑: 진행률과 켜진 상태 */
+  --tape-2: #d9a81c;
+  --tape-ink: #2b2a3a;
+  --teal: #2f7f79;      /* 링크, 완료 표시 */
+  --sign: #fffdf4;      /* 코드 간판 바탕 */
+  --sign-ink: #2b3147;
+  --plate: rgba(35, 36, 54, .82);  /* 건물 이름표 */
+  --plate-ink: #f8f3e4;
+  --shadow: rgba(20, 22, 40, .3);
+  --sky-fallback: #9cc9e3;
+  --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  --mono: ui-monospace, "D2Coding", "Cascadia Mono", Consolas, "Courier New", monospace;
+  --px: 2px;            /* 도트 한 칸 */
+  --edge: 0 calc(var(--px) * -1) 0 0 var(--line), 0 var(--px) 0 0 var(--line), calc(var(--px) * -1) 0 0 0 var(--line), var(--px) 0 0 0 var(--line);
+  --drop: 0 calc(var(--px) * 3) 0 0 var(--shadow), var(--px) calc(var(--px) * 2) 0 0 var(--shadow), calc(var(--px) * -1) calc(var(--px) * 2) 0 0 var(--shadow);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #24273b; --paper-2: #2f3350; --paper-3: #3b4063; --ink: #eceaf5; --ink-soft: #a9a8c0; --line: #0e0f1b;
+    --tape: #f2c230; --tape-2: #c2941f; --tape-ink: #1c1d2c; --teal: #6fc7bf; --sign: #2b2f4a; --sign-ink: #eceaf5;
+    --plate: rgba(14, 15, 27, .85); --plate-ink: #eceaf5;
+    --shadow: rgba(0, 0, 0, .5); --sky-fallback: #141a33; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #24273b; --paper-2: #2f3350; --paper-3: #3b4063; --ink: #eceaf5; --ink-soft: #a9a8c0; --line: #0e0f1b;
+  --tape: #f2c230; --tape-2: #c2941f; --tape-ink: #1c1d2c; --teal: #6fc7bf; --sign: #2b2f4a; --sign-ink: #eceaf5;
+  --plate: rgba(14, 15, 27, .85); --plate-ink: #eceaf5;
+  --shadow: rgba(0, 0, 0, .5); --sky-fallback: #141a33; color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--sky-fallback); color: var(--ink);
+  font: 13px/1.45 var(--font); overflow: hidden; -webkit-text-size-adjust: 100%;
+}
+button, input { font: inherit; color: inherit; }
+button { -webkit-appearance: none; appearance: none; }
+#stage { position: relative; width: 100%; height: 100%; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+#world { position: absolute; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; display: block; cursor: default; touch-action: none; }
+#overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+/* 도트 모서리 판 */
+.box { background: var(--paper); color: var(--ink); border: 0; border-radius: 0; box-shadow: var(--edge), var(--drop); }
+.ico { width: 18px; height: 18px; flex: none; display: block; }
+
+/* 말풍선: 꼬리도 도트 두 단으로 */
+.bubble {
+  position: absolute; left: 0; top: 0; max-width: min(240px, 70vw); padding: 4px 9px 5px;
+  background: var(--paper); color: var(--ink); box-shadow: var(--edge), 0 calc(var(--px) * 3) 0 0 var(--shadow);
+  font-size: 13px; font-weight: 600; line-height: 1.3; transform-origin: 50% 100%; will-change: transform;
+}
+.bubble span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bubble::before, .bubble::after { content: ""; position: absolute; left: 50%; background: var(--paper); }
+.bubble::before { top: 100%; width: 6px; height: 4px; margin-left: -3px; box-shadow: calc(var(--px) * -1) 0 0 0 var(--line), var(--px) 0 0 0 var(--line); }
+.bubble::after { top: calc(100% + 4px); width: 2px; height: 2px; margin-left: -1px; box-shadow: calc(var(--px) * -1) 0 0 0 var(--line), var(--px) 0 0 0 var(--line), 0 var(--px) 0 0 var(--line); }
+.bubble.pop { animation: pop .16s steps(3) both; }
+@keyframes pop { from { opacity: 0; margin-top: 4px; } to { opacity: 1; margin-top: 0; } }
+
+/* 건물 이름표와 코드 간판 */
+.tag {
+  position: absolute; left: 0; top: 0; padding: 1px 6px 2px; font: 600 10.5px/1.4 var(--mono); letter-spacing: .01em;
+  background: var(--plate); color: var(--plate-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: 0 calc(var(--px) * -1) 0 0 var(--plate), 0 var(--px) 0 0 var(--plate);
+}
+.tag.done::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 5px; background: var(--tape); vertical-align: 1px; }
+.board {
+  position: absolute; left: 0; top: 0; min-width: 120px; max-width: min(300px, 78vw); padding: 0;
+  background: var(--sign); color: var(--sign-ink); box-shadow: var(--edge), var(--drop); transition: opacity .3s;
+}
+.board b { display: block; padding: 2px 8px; font: 700 11px/1.5 var(--mono); background: var(--tape); color: var(--tape-ink); box-shadow: 0 var(--px) 0 0 var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board pre { margin: var(--px) 0 0; padding: 5px 8px 6px; font: 11px/1.35 var(--mono); white-space: pre; overflow: hidden; }
+.board.fade { opacity: 0; }
+.banner {
+  position: absolute; left: 0; top: 0; padding: 3px 12px; font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  background: #fbf6e6; color: #2b3147; box-shadow: 0 -2px 0 0 #2b3147, 0 2px 0 0 #2b3147, -2px 0 0 0 #2b3147, 2px 0 0 0 #2b3147; white-space: nowrap;
+}
+.sitesign {
+  position: absolute; left: 0; top: 0; padding: 2px 9px 3px; font-size: 12px; font-weight: 800; white-space: nowrap; text-align: center;
+  background: var(--tape); color: var(--tape-ink); box-shadow: var(--edge), inset 0 -2px 0 0 var(--tape-2);
+}
+.sitesign small { display: block; font-weight: 600; font-size: 10px; opacity: .8; }
+.cheer { position: absolute; left: 0; top: 0; font-size: 26px; animation: rise 1.8s ease-out forwards; }
+@keyframes rise { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: 0 -160px; } }
+
+/* 아래 조작부 */
+#hud {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 14px;
+  padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px)); pointer-events: none;
+}
+#progress { flex: 1 1 auto; min-width: 0; max-width: 460px; padding: 5px 10px 8px; pointer-events: auto; }
+#progress .label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 5px; font-size: 12px; }
+#progress-text { font-weight: 800; white-space: nowrap; }
+#progress-count { color: var(--ink-soft); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+#bar { height: 8px; background: var(--paper-3); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); overflow: hidden; }
+#bar i {
+  display: block; height: 100%; width: 0; transition: width .5s steps(12);
+  background: repeating-linear-gradient(-45deg, var(--tape) 0 8px, var(--tape-ink) 8px 12px); background-size: 34px 100%;
+}
+#stage.busy #bar i { animation: tape 1.2s steps(8) infinite; }
+@keyframes tape { to { background-position: 34px 0; } }
+#tools { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; pointer-events: auto; transition: opacity .4s; }
+#stage.calm #tools { opacity: .8; }
+#stage.calm #status { opacity: .5; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 3px 10px 5px;
+  background: var(--paper); color: var(--ink); border: 0; border-radius: 0; cursor: pointer; font-size: 12.5px; font-weight: 700; white-space: nowrap;
+  box-shadow: var(--edge), inset 0 calc(var(--px) * -1) 0 0 var(--paper-3), 0 calc(var(--px) * 3) 0 0 var(--shadow);
+}
+.btn:hover { background: #fffdf4; }
+.btn[aria-pressed="true"]:hover { background: var(--tape); }
+.btn:active { translate: 0 2px; box-shadow: var(--edge), inset 0 0 0 0 var(--paper-3), 0 var(--px) 0 0 var(--shadow); }
+.btn[aria-pressed="true"] { background: var(--tape); color: var(--tape-ink); box-shadow: var(--edge), inset 0 calc(var(--px) * -1) 0 0 var(--tape-2), 0 calc(var(--px) * 3) 0 0 var(--shadow); }
+.btn.quiet { box-shadow: none; background: transparent; min-height: 24px; padding: 2px 6px; }
+.btn.quiet:hover { background: rgba(0, 0, 0, .08); }
+.btn:focus-visible, .field:focus-visible, .linkish:focus-visible, .chip:focus-visible, .tab:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn:hover { background: var(--paper-2); } }
+:root[data-theme="dark"] .btn:hover { background: var(--paper-2); }
+
+#status {
+  position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); right: 14px; display: flex; gap: 6px; align-items: center;
+  padding: 1px 8px 2px; font-size: 11.5px; font-weight: 700; transition: opacity .4s; pointer-events: none;
+  background: var(--plate); color: var(--plate-ink); box-shadow: 0 -2px 0 0 var(--plate), 0 2px 0 0 var(--plate);
+}
+#status i { width: 6px; height: 6px; background: #9a98ad; }
+#status.live i { background: #5fd08a; }
+#status.demo i { background: var(--tape); }
+
+/* 상세 패널 */
+#panel {
+  position: absolute; top: calc(42px + env(safe-area-inset-top, 0px)); right: 14px; bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  width: min(330px, calc(100% - 28px)); display: flex; flex-direction: column; min-height: 0;
+}
+.stripe { height: 6px; flex: none; background: repeating-linear-gradient(-45deg, var(--tape) 0 8px, var(--tape-ink) 8px 12px); box-shadow: 0 var(--px) 0 0 var(--line); }
+.tabs { display: flex; flex: none; gap: 2px; padding: 8px 8px 0; margin-top: var(--px); background: var(--paper-2); box-shadow: 0 var(--px) 0 0 var(--line); }
+.tab { flex: 1 1 0; min-height: 28px; padding: 3px 6px 4px; border: 0; background: transparent; color: var(--ink-soft); font-size: 12.5px; font-weight: 700; cursor: pointer; border-radius: 0; }
+.tab[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 calc(var(--px) * -1) 0 0 var(--line), calc(var(--px) * -1) 0 0 0 var(--line), var(--px) 0 0 0 var(--line), 0 var(--px) 0 0 var(--paper); }
+.tabs .btn.quiet { flex: none; align-self: center; margin-bottom: 4px; }
+#panel .scroll { overflow-y: auto; min-height: 0; padding: 12px 12px 14px; margin-top: var(--px); display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+#panel h2 { display: flex; align-items: center; gap: 6px; margin: 0 0 7px; font-size: 11px; letter-spacing: .06em; color: var(--ink-soft); font-weight: 800; }
+#panel h2::before { content: ""; width: 4px; height: 10px; background: var(--tape); box-shadow: 0 0 0 1px var(--line); }
+#panel ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+#site-name { font-size: 15px; font-weight: 800; }
+.task { display: flex; gap: 8px; align-items: baseline; font-size: 13px; min-width: 0; }
+.task i { flex: none; width: 8px; height: 8px; box-shadow: 0 0 0 2px var(--ink); translate: 0 0; background: transparent; }
+.task.done i { background: var(--teal); box-shadow: 0 0 0 2px var(--teal); }
+.task.done span { color: var(--ink-soft); text-decoration: line-through; }
+.task span { min-width: 0; overflow-wrap: anywhere; }
+.petrow { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 6px 8px; background: var(--paper-2); }
+.petrow canvas { width: 40px; height: 40px; image-rendering: pixelated; grid-row: span 2; }
+.petrow small { color: var(--ink-soft); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.petrow b { font-size: 13px; }
+.field { width: 100%; box-sizing: border-box; min-width: 0; min-height: 26px; padding: 2px 7px; background: var(--paper); border: 0; box-shadow: inset 0 0 0 2px var(--line); border-radius: 0; font-size: 13px; font-weight: 700; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row .field { flex: 1 1 130px; width: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 2px 9px 3px; min-height: 26px; font-size: 12px; font-weight: 700; background: var(--paper-2); color: var(--ink); border: 0; box-shadow: inset 0 0 0 2px var(--paper-3); cursor: pointer; border-radius: 0; }
+.chip:hover { box-shadow: inset 0 0 0 2px var(--ink-soft); }
+.chip[aria-pressed="true"] { background: var(--tape); color: var(--tape-ink); box-shadow: inset 0 0 0 2px var(--line); }
+.muted { color: var(--ink-soft); font-size: 12px; margin: 0; }
+.note { color: var(--ink-soft); font-size: 11.5px; margin: 7px 0 0; }
+.snip { background: var(--sign); color: var(--sign-ink); box-shadow: inset 0 0 0 2px var(--paper-3); margin-bottom: 8px; }
+.snip b { display: block; padding: 3px 8px; font: 700 11px/1.5 var(--mono); background: var(--paper-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.snip pre { margin: 0; padding: 5px 8px 6px; font: 11px/1.35 var(--mono); overflow-x: auto; }
+.linkish { background: none; border: 0; padding: 0; color: var(--teal); font-weight: 700; cursor: pointer; text-decoration: underline; }
+
+/* 폰에서 보기 */
+#phone {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, calc(100% - 28px)); max-height: calc(100% - 24px);
+  display: flex; flex-direction: column; min-height: 0;
+}
+#phone header, #code header { display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 10px; background: var(--tape); color: var(--tape-ink); box-shadow: 0 var(--px) 0 0 var(--line); flex: none; }
+#phone header b, #code header b { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#phone .body { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 14px 12px; margin-top: var(--px); overflow-y: auto; min-height: 0; }
+#phone .text { display: flex; flex-direction: column; gap: 8px; min-width: 0; width: 100%; }
+#lan-qr { max-width: 100%; height: auto; image-rendering: pixelated; background: #fff; box-shadow: 0 0 0 2px var(--line); flex: none; }
+.lan-url { font: 11px/1.4 var(--mono); overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; margin: 0; }
+#phone p { margin: 0; }
+#phone .steps { margin: 0; padding-left: 18px; font-size: 12.5px; display: flex; flex-direction: column; gap: 3px; }
+
+/* 파일 보기 */
+#code {
+  position: absolute; left: 14px; top: calc(42px + env(safe-area-inset-top, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  width: min(560px, calc(100% - 28px)); display: flex; flex-direction: column; min-height: 0; background: var(--sign); color: var(--sign-ink);
+}
+#code header b { font: 700 12px/1.5 var(--mono); }
+#code pre { flex: 1 1 auto; min-height: 0; margin: var(--px) 0 0; padding: 10px 12px; overflow: auto; font: 12px/1.5 var(--mono); tab-size: 2; user-select: text; -webkit-user-select: text; }
+#code p { margin: 0; padding: 6px 12px; font-size: 12px; background: var(--paper-2); }
+
+/* 펫 카드 */
+#card { position: absolute; left: 0; top: 0; width: 200px; padding: 9px 10px 11px; display: flex; flex-direction: column; gap: 6px; }
+#card small { color: var(--ink-soft); font-size: 12px; }
+#card .row .btn { flex: 1 1 0; min-height: 28px; padding: 2px 6px 4px; }
+
+@media (max-width: 700px) { /* 좁으면 버튼 글자를 접고 그림만 남긴다 */
+  #tools .btn span { display: none; }
+  #tools .btn { padding: 3px 8px 5px; min-width: 34px; }
+}
+@media (max-width: 560px) {
+  #hud { flex-direction: column; align-items: stretch; gap: 10px; }
+  #progress { max-width: none; }
+  #tools { order: -1; gap: 8px; }
+  #panel { top: auto; left: 14px; right: 14px; width: auto; height: 54%; bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+  #code { right: 14px; width: auto; bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (pointer: coarse) { /* 손가락으로 누르기 좋게, iOS가 입력칸을 확대하지 않게 */
+  .chip { min-height: 34px; padding: 3px 11px 4px; }
+  .btn { min-height: 38px; }
+  .tab { min-height: 36px; }
+  .field { font-size: 16px; min-height: 34px; }
+}
+@media (max-height: 520px) and (min-width: 561px) { /* 가로로 긴 창과 눕힌 폰 */
+  #panel { top: 10px; bottom: 70px; }
+  #code { top: 10px; bottom: 70px; }
+  #phone { width: min(520px, calc(100% - 28px)); }
+  #phone .body { flex-direction: row; align-items: flex-start; gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble.pop, .cheer, #stage.busy #bar i { animation: none; }
+  #bar i, .board, #tools { transition: none; }
+}
+</style>
+<!--CP:HEAD-END-->
+</head>
+<body>
+<!--CP:BODY-START-->
+<div id="stage" class="calm">
+  <canvas id="world" role="img" aria-label="펫들이 일하는 공사 현장" data-i18n-attr="aria-label:world.aria"></canvas>
+  <div id="overlay"></div>
+
+  <div id="status" aria-live="polite"><i></i><span id="status-text">연결 중</span></div>
+
+  <aside id="panel" class="box" hidden aria-label="상세 정보" data-i18n-attr="aria-label:panel.aria">
+    <div class="stripe"></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" type="button" role="tab" id="tab-site" aria-controls="pane-site" aria-selected="true" data-i18n="tab.site">현장</button>
+      <button class="tab" type="button" role="tab" id="tab-pets" aria-controls="pane-pets" aria-selected="false" data-i18n="tab.pets">펫</button>
+      <button class="tab" type="button" role="tab" id="tab-settings" aria-controls="pane-settings" aria-selected="false" data-i18n="tab.settings">설정</button>
+      <button class="btn quiet" type="button" id="panel-close" aria-label="닫기" data-i18n-attr="aria-label:btn.close"><svg class="ico" data-ico="close"></svg></button>
+    </div>
+
+    <div class="scroll" id="pane-site" role="tabpanel" aria-labelledby="tab-site">
+      <section>
+        <h2 data-i18n="sec.site">현장</h2>
+        <div id="site-info"></div>
+      </section>
+      <section>
+        <h2 data-i18n="sec.tasks">작업 목록</h2>
+        <ul id="tasks"></ul>
+      </section>
+      <section>
+        <h2 data-i18n="sec.snips">방금 고친 곳</h2>
+        <div id="snips"></div>
+      </section>
+    </div>
+
+    <div class="scroll" id="pane-pets" role="tabpanel" aria-labelledby="tab-pets" hidden>
+      <section>
+        <h2 data-i18n="sec.pets">펫</h2>
+        <ul id="pets"></ul>
+      </section>
+    </div>
+
+    <div class="scroll" id="pane-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <section>
+        <h2 data-i18n="sec.lang">언어</h2>
+        <div class="chips">
+          <button class="chip" type="button" id="lang-ko" aria-pressed="true" lang="ko">한국어</button>
+          <button class="chip" type="button" id="lang-en" aria-pressed="false" lang="en">English</button>
+        </div>
+      </section>
+      <section id="window-sec" hidden>
+        <h2 data-i18n="sec.window">창 모양</h2>
+        <div class="chips" id="win-chips"></div>
+        <p class="note" id="win-note"></p>
+      </section>
+      <section id="settings-sec" hidden>
+        <h2 data-i18n="sec.settings">뷰어</h2>
+        <div class="chips">
+          <button class="chip" type="button" id="set-appwindow" aria-pressed="true" data-i18n="set.appwindow">전용 창으로 열기</button>
+          <button class="chip" type="button" id="set-autoopen" aria-pressed="false" data-i18n="set.autoopen">세션을 시작하면 뷰어 열기</button>
+          <button class="chip" type="button" id="set-announce" aria-pressed="true" data-i18n="set.announce">시작할 때 주소 알려 주기</button>
+        </div>
+        <p class="note" data-i18n="set.appwindow.note">끄면 평소 쓰는 브라우저의 탭으로 열려요.</p>
+      </section>
+      <section>
+        <h2 data-i18n="sec.sound">소리</h2>
+        <div class="chips">
+          <button class="chip" type="button" id="snd-sfx" aria-pressed="false" data-i18n="snd.sfx">효과음</button>
+          <button class="chip" type="button" id="snd-bgm" aria-pressed="false" data-i18n="snd.bgm">배경 음악</button>
+        </div>
+        <p class="note" data-i18n="snd.note">레트로 게임기풍으로 코드에서 합성한 소리예요. 기본은 꺼져 있어요.</p>
+      </section>
+      <section>
+        <h2 data-i18n="sec.date">날짜 미리보기</h2>
+        <div class="row">
+          <input class="field" type="date" id="date-pick" aria-label="미리 볼 날짜" data-i18n-attr="aria-label:date.aria">
+          <button class="chip" type="button" id="date-today" data-i18n="date.today">오늘</button>
+        </div>
+        <div class="chips" id="date-chips" style="margin-top:8px"></div>
+        <div class="row" style="margin-top:10px">
+          <label for="birthday" class="muted" style="flex:none" data-i18n="date.birthday">생일</label>
+          <input class="field" id="birthday" placeholder="MM-DD" inputmode="numeric" maxlength="5" autocomplete="off">
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <aside id="code" class="box" hidden aria-label="파일 보기" data-i18n-attr="aria-label:code.aria">
+    <header><b id="code-name"></b><button class="btn quiet" type="button" id="code-close" aria-label="닫기" data-i18n-attr="aria-label:btn.close"><svg class="ico" data-ico="close"></svg></button></header>
+    <pre id="code-text" tabindex="0"></pre>
+    <p id="code-note" hidden></p>
+  </aside>
+
+  <aside id="phone" class="box" hidden role="dialog" aria-label="폰에서 보기" data-i18n-attr="aria-label:phone.aria">
+    <header><b data-i18n="phone.title">폰에서 보기</b><button class="btn quiet" type="button" id="phone-close" aria-label="닫기" data-i18n-attr="aria-label:btn.close"><svg class="ico" data-ico="close"></svg></button></header>
+    <div class="body">
+      <canvas id="lan-qr" width="1" height="1" role="img" aria-label="폰에서 여는 주소의 QR 코드" data-i18n-attr="aria-label:phone.qr.aria" hidden></canvas>
+      <div class="text">
+        <p id="lan-note" aria-live="polite"></p>
+        <ol class="steps" id="lan-steps" hidden>
+          <li data-i18n="phone.how">폰을 PC와 같은 와이파이에 두고 카메라로 QR을 찍으세요.</li>
+          <li data-i18n="phone.home">폰 브라우저에서 "홈 화면에 추가"를 해 두면 다음부터는 아이콘 하나로 열려요.</li>
+        </ol>
+        <div id="lan-urls"></div>
+        <div id="lan-off-row" hidden>
+          <button class="chip" type="button" id="lan-off" data-i18n="phone.off">폰에서 보기 끄기</button>
+          <p class="note" data-i18n="phone.off.note">끄면 주소가 사라지고, 다시 켜면 새 주소가 만들어져요.</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="card" class="box" hidden>
+    <input class="field" id="card-name" maxlength="12" aria-label="펫 이름" data-i18n-attr="aria-label:card.name.aria" autocomplete="off">
+    <small id="card-kind"></small>
+    <small id="card-doing"></small>
+    <div class="row">
+      <button class="btn" type="button" id="card-pet" data-i18n="card.pet">쓰다듬기</button>
+      <button class="btn" type="button" id="card-snack" data-i18n="card.snack">간식</button>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="progress" class="box">
+      <div class="label"><span id="progress-text">공사 준비 중</span><span id="progress-count"></span></div>
+      <div id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progress-text"><i></i></div>
+    </div>
+    <div id="tools">
+      <button class="btn" type="button" id="btn-snack" aria-pressed="false" title="간식을 고른 뒤 땅을 누르면 떨어져요" data-i18n-attr="title:btn.snack.tip;aria-label:btn.snack"><svg class="ico" data-ico="snack"></svg><span data-i18n="btn.snack">간식</span></button>
+      <button class="btn" type="button" id="btn-cheer" data-i18n-attr="aria-label:btn.cheer"><svg class="ico" data-ico="cheer"></svg><span data-i18n="btn.cheer">응원</span></button>
+      <button class="btn" type="button" id="btn-sound" aria-pressed="false" data-i18n-attr="aria-label:btn.sound"><svg class="ico" data-ico="sound"></svg><span data-i18n="btn.sound">소리</span></button>
+      <button class="btn" type="button" id="btn-phone" aria-pressed="false" aria-controls="phone" title="폰에서 보기: QR을 바로 띄워요" data-i18n-attr="title:btn.phone.tip;aria-label:btn.phone" hidden><svg class="ico" data-ico="phone"></svg><span data-i18n="btn.phone">폰</span></button>
+      <button class="btn" type="button" id="btn-full" aria-pressed="false" data-i18n-attr="aria-label:btn.full" hidden><svg class="ico" data-ico="full"></svg><span data-i18n="btn.full">전체 화면</span></button>
+      <button class="btn" type="button" id="btn-detail" aria-pressed="false" aria-controls="panel" data-i18n-attr="aria-label:btn.detail"><svg class="ico" data-ico="detail"></svg><span data-i18n="btn.detail">상세</span></button>
+    </div>
+  </div>
+</div>
+<!--CP:BODY-END-->
+<!--CP:SCRIPTS-START-->
+<script src="shared/reduce.js"></script>
+<script src="shared/calendar.js"></script>
+<script src="shared/qr.js"></script>
+<script src="js/util.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/seasons.js"></script>
+<script src="js/world.js"></script>
+<script src="js/pets.js"></script>
+<script src="js/director.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/main.js"></script>
+<!--CP:SCRIPTS-END-->
+</body>
+</html>

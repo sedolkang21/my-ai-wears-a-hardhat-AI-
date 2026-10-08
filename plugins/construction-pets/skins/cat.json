@@ -1,0 +1,28 @@
+{
+  "comment": "예시 스킨: 고양이(0.2.0까지의 기타 AI 펫). config/pets.json의 kinds 항목에 \"skin\": \"cat\" 을 넣으면 그 펫이 이 모습으로 바뀐다.",
+  "helmet": false,
+  "hatY": 5,
+  "eyes": [5, 10],
+  "eyeY": 7,
+  "body": [
+    "................",
+    "..o..........o..",
+    "..oo........oo..",
+    "..opo......opo..",
+    "..oooooooooooo..",
+    "..ollooooooooo..",
+    "..oooooooooooo..",
+    "..oooooooooooo..",
+    "..oooooooooooo..",
+    ".woooooppooooow.",
+    "..yyyyyyyyyyyy.o",
+    "..yywyyyyyywyy.o",
+    "..ddddddddddddoo"
+  ],
+  "legs": [
+    ["...ooo....ooo...", "...ooo....ooo...", "...ddd....ddd..."],
+    ["..ooo.....ooo...", "..ooo.....ooo...", "..........ddd..."],
+    ["...ooo....ooo...", "...ooo....ooo...", "...ddd....ddd..."],
+    ["...ooo.....ooo..", "...ooo.....ooo..", "...ddd.........."]
+  ]
+}

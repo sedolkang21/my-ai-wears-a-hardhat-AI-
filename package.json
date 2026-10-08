@@ -1,0 +1,12 @@
+{
+  "name": "construction-pets",
+  "version": "0.3.0",
+  "private": true,
+  "description": "공사현장 펫 뷰어: Claude Code가 일하는 모습을 펫들의 공사 현장으로 보여준다",
+  "scripts": {
+    "test": "node --test test/logic.test.js test/server.test.js",
+    "server": "node plugins/construction-pets/server/server.js --print",
+    "fake": "node plugins/construction-pets/scripts/fake-events.js",
+    "demo": "node scripts/build-demo.js"
+  }
+}

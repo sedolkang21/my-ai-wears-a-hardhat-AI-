@@ -1,0 +1,19 @@
+{
+  "name": "construction-pets",
+  "description": "공사현장 펫 뷰어와 '공사현장 보기' 버튼 mod",
+  "owner": {
+    "name": "sedolkang21"
+  },
+  "plugins": [
+    {
+      "name": "construction-pets",
+      "source": "./plugins/construction-pets",
+      "description": "공사현장 펫 뷰어 (훅, 로컬 서버, 뷰어)"
+    },
+    {
+      "name": "construction-pets-button",
+      "source": "./plugins/construction-pets-button",
+      "description": "'공사현장 보기' 버튼 mod (선택)"
+    }
+  ]
+}

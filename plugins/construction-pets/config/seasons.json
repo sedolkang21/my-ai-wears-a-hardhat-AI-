@@ -1,0 +1,25 @@
+{
+  "seasons": [
+    {"id": "spring", "label": {"ko": "봄", "en": "Spring"}, "months": [3, 4, 5]},
+    {"id": "summer", "label": {"ko": "여름", "en": "Summer"}, "months": [6, 7, 8]},
+    {"id": "autumn", "label": {"ko": "가을", "en": "Autumn"}, "months": [9, 10, 11]},
+    {"id": "winter", "label": {"ko": "겨울", "en": "Winter"}, "months": [12, 1, 2]}
+  ],
+  "events": [
+    {"id": "newyear", "label": {"ko": "새해", "en": "New Year"}, "ranges": [["12-29", "01-03"]]},
+    {"id": "seollal", "label": {"ko": "설날", "en": "Seollal"}, "lunar": "seollal", "pad": 3},
+    {"id": "valentine", "label": {"ko": "발렌타인·화이트데이", "en": "Valentine · White Day"}, "ranges": [["02-12", "02-14"], ["03-12", "03-14"]]},
+    {"id": "aprilfools", "label": {"ko": "만우절", "en": "April Fools' Day"}, "ranges": [["04-01", "04-01"]]},
+    {"id": "childrensday", "label": {"ko": "어린이날", "en": "Children's Day"}, "ranges": [["05-04", "05-05"]]},
+    {"id": "chuseok", "label": {"ko": "추석", "en": "Chuseok"}, "lunar": "chuseok", "pad": 3},
+    {"id": "hangul", "label": {"ko": "한글날", "en": "Hangul Day"}, "ranges": [["10-09", "10-09"]]},
+    {"id": "halloween", "label": {"ko": "할로윈", "en": "Halloween"}, "ranges": [["10-24", "10-31"]]},
+    {"id": "christmas", "label": {"ko": "크리스마스", "en": "Christmas"}, "ranges": [["12-18", "12-25"]]},
+    {"id": "birthday", "label": {"ko": "생일", "en": "Birthday"}, "user": "birthday"}
+  ],
+  "disabled": [],
+  "lunar": {
+    "seollal": {"2025": "01-29", "2026": "02-17", "2027": "02-07", "2028": "01-27", "2029": "02-13", "2030": "02-03", "2031": "01-23", "2032": "02-11", "2033": "01-31", "2034": "02-19", "2035": "02-08", "2036": "01-28"},
+    "chuseok": {"2025": "10-06", "2026": "09-25", "2027": "09-15", "2028": "10-03", "2029": "09-22", "2030": "09-12", "2031": "10-01", "2032": "09-19", "2033": "09-08", "2034": "09-27", "2035": "09-16", "2036": "10-04"}
+  }
+}

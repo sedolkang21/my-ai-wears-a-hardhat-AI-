@@ -1,0 +1,8 @@
+{
+  "name": "construction-pets-button",
+  "version": "0.3.0",
+  "description": "프롬프트 위에 '공사현장 보기' 버튼을 붙이는 mod (선택). construction-pets 플러그인과 함께 쓴다.",
+  "author": {
+    "name": "sedolkang21"
+  }
+}

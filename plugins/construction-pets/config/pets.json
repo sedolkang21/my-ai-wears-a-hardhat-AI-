@@ -1,0 +1,127 @@
+{
+  "kinds": {
+    "claude": {
+      "label": { "ko": "Claude 펫", "en": "Claude pet" },
+      "species": "octopus",
+      "personality": "craftsman",
+      "defaultName": { "ko": "클로", "en": "Clo" },
+      "colors": { "base": "#D97757", "shade": "#B85C40", "light": "#EDA084" }
+    },
+    "gpt": {
+      "label": { "ko": "GPT 펫", "en": "GPT pet" },
+      "species": "robot",
+      "personality": "speedster",
+      "defaultName": { "ko": "볼트", "en": "Bolt" },
+      "colors": { "base": "#5DB9A0", "shade": "#3C8C78", "light": "#A5E0CF" }
+    },
+    "other": {
+      "label": { "ko": "기타 AI 펫", "en": "Other AI pet" },
+      "species": "cloud",
+      "personality": "explorer",
+      "defaultName": { "ko": "뭉게", "en": "Puff" },
+      "colors": { "base": "#C4B8F0", "shade": "#8F80D2", "light": "#F1EDFF" }
+    }
+  },
+  "personalities": {
+    "craftsman": {
+      "label": { "ko": "차분한 장인", "en": "Calm craftsman" },
+      "walkSpeed": 30,
+      "workTempo": 0.8,
+      "hopHeight": 2,
+      "chatter": 0.4,
+      "detour": 0,
+      "rest": ["coffee", "skygaze", "nap"],
+      "lines": {
+        "ko": {
+          "hello": ["안녕하세요, 오늘도 꼼꼼히 지을게요"],
+          "prompt": ["한 번 더 확인해볼게요", "설계도부터 살펴볼게요", "차근차근 해볼게요"],
+          "fail": ["앗, 죄송해요. 다시 볼게요", "제가 놓쳤네요. 고칠게요"],
+          "done": ["꼼꼼히 마무리했어요", "준공입니다. 확인해 주세요"],
+          "wait": ["이거 해도 될까요?"],
+          "idle": ["다음 지시 기다릴게요"],
+          "pet": ["고맙습니다", "힘이 나네요"],
+          "snack": ["잘 먹겠습니다!"],
+          "held": ["어어, 조심히요"]
+        },
+        "en": {
+          "hello": ["Hello! I'll build carefully today too"],
+          "prompt": ["Let me double-check that", "Blueprint first", "One step at a time"],
+          "fail": ["Oops, sorry. Looking again", "I missed that. Fixing it"],
+          "done": ["Finished with care", "All built. Please take a look"],
+          "wait": ["May I do this?"],
+          "idle": ["Ready for the next order"],
+          "pet": ["Thank you", "That gives me energy"],
+          "snack": ["Thanks for the treat!"],
+          "held": ["Whoa, gently please"]
+        }
+      }
+    },
+    "speedster": {
+      "label": { "ko": "자신만만한 속전속결", "en": "Confident speedster" },
+      "walkSpeed": 58,
+      "workTempo": 1.5,
+      "hopHeight": 3,
+      "chatter": 0.85,
+      "detour": 0,
+      "rest": ["stretch", "coffee"],
+      "lines": {
+        "ko": {
+          "hello": ["삐빅! 뭐부터 부술까, 아니 지을까!"],
+          "prompt": ["금방 끝내버릴게!", "이 정도야 식은 죽 먹기지!", "맡겨만 줘!"],
+          "fail": ["어? 이럴 리가 없는데!", "방금 건 연습이었어!"],
+          "done": ["봤지? 벌써 끝!", "역시 나야!"],
+          "wait": ["빨리빨리! 해도 되지?"],
+          "idle": ["다음 거! 다음 거 줘!"],
+          "pet": ["더 칭찬해도 돼!", "삐빅, 기분 좋음"],
+          "snack": ["에너지 충전!"],
+          "held": ["우와, 빠르다!"]
+        },
+        "en": {
+          "hello": ["Beep! What do we smash, I mean build!"],
+          "prompt": ["Done in no time!", "Piece of cake!", "Leave it to me!"],
+          "fail": ["Huh? That can't be right!", "That one was practice!"],
+          "done": ["See? Done already!", "Nailed it!"],
+          "wait": ["Quick, quick! Can I?"],
+          "idle": ["Next! Give me the next one!"],
+          "pet": ["More praise is fine!", "Beep. Feeling good"],
+          "snack": ["Recharged!"],
+          "held": ["Whoa, so fast!"]
+        }
+      }
+    },
+    "explorer": {
+      "label": { "ko": "호기심 많은 탐험가", "en": "Curious explorer" },
+      "walkSpeed": 40,
+      "workTempo": 1.0,
+      "hopHeight": 2,
+      "chatter": 0.6,
+      "detour": 0.45,
+      "rest": ["skygaze", "sniff", "nap"],
+      "lines": {
+        "ko": {
+          "hello": ["둥실둥실, 여긴 뭐 하는 곳이지?"],
+          "prompt": ["여긴 뭐지? 구경해볼래", "오, 재밌겠다", "저쪽도 궁금한데"],
+          "fail": ["어라, 연기가 나네? 신기하다", "이건 왜 이럴까?"],
+          "done": ["다 됐다! 이제 옆 건물 구경 가자"],
+          "wait": ["이거 눌러봐도 돼?"],
+          "idle": ["심심한데 둘러볼까"],
+          "pet": ["몽글몽글", "거기 좋아"],
+          "snack": ["이건 무슨 맛일까?"],
+          "held": ["높다! 저기까지 보여!"]
+        },
+        "en": {
+          "hello": ["Floating in... what is this place?"],
+          "prompt": ["What's this? Let me look", "Ooh, sounds fun", "I wonder what's over there"],
+          "fail": ["Oh, smoke? Fascinating", "Why does it do that?"],
+          "done": ["All done! Let's go see the next building"],
+          "wait": ["Can I press this?"],
+          "idle": ["Bored. Maybe I'll look around"],
+          "pet": ["So fluffy", "Right there"],
+          "snack": ["I wonder how this tastes?"],
+          "held": ["So high! I can see everything!"]
+        }
+      }
+    }
+  },
+  "helmets": ["#F2C230", "#6FB1D9", "#F1EEE4", "#8FCB7A", "#E58A9A", "#B79AE0"]
+}

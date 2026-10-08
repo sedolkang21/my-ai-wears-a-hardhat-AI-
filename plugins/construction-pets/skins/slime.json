@@ -1,0 +1,28 @@
+{
+  "comment": "예시 스킨: 말랑한 물방울. config/pets.json의 kinds 항목에 \"skin\": \"slime\" 을 넣으면 그 펫이 이 모습으로 바뀐다.",
+  "helmet": true,
+  "hatY": 5,
+  "eyes": [5, 10],
+  "eyeY": 8,
+  "body": [
+    "................",
+    "................",
+    "......oooo......",
+    ".....oooooo.....",
+    "....olloooooo...",
+    "...oloooooooo...",
+    "...oooooooooo...",
+    "..oooooooooooo..",
+    "..oooooooooooo..",
+    "..oooooooooooo..",
+    ".oooooooooooooo.",
+    ".oooooooooooooo.",
+    ".oooooooooooooo."
+  ],
+  "legs": [
+    [".dddddddddddddd.", "..dddddddddddd..", "................"],
+    ["dddddddddddddddd", ".dddddddddddddd.", "................"],
+    [".dddddddddddddd.", "..dddddddddddd..", "................"],
+    ["..dddddddddddd..", "...dddddddddd...", "................"]
+  ]
+}
