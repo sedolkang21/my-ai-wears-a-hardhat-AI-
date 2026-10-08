@@ -4,6 +4,8 @@
 
 > An unofficial fan project. Not made or endorsed by Anthropic.
 
+![The construction site viewer in action](docs/demo-en.gif)
+
 A view-only viewer that shows Claude Code at work as cute pixel pets on a construction site instead of a terminal.
 Each file is a building, and every time Claude edits a file an orange octopus pet swings its hammer.
 
@@ -13,6 +15,10 @@ Each file is a building, and every time Claude edits a file an orange octopus pe
 - Works on Windows, macOS, and Linux. One **Phone** button shows it on a phone on the same Wi-Fi.
 - Opens in its own window without an address bar, not as a browser tab. You pick the window shape (strip, 16:9, tall, and so on).
 - Screen text and pet lines come in Korean and English.
+
+| Three pets at work by day | After everyone went home |
+| --- | --- |
+| ![Octopus, robot and cloud pets building](docs/pets.png) | ![The site at night with lit windows](docs/night.png) |
 
 ## Try it first
 
@@ -221,4 +227,9 @@ Reload the viewer after editing.
 
 The Claude pet is pixel art drawn in code after Claude's orange mascot. No official images or logos are included.
 The GPT pet (a little robot) and the pet for other AIs (a fluffy cloud) are original and are not modeled on any company's character.
-This was made for personal use. Before distributing it publicly, check Anthropic's brand guidelines and, if needed, swap the look in `skins/`.
+Before redistributing it elsewhere, check Anthropic's brand guidelines and, if needed, swap the look in `skins/`.
+
+## License
+
+[MIT](LICENSE). Use, change, and share the code and art freely.
+The license does not grant any rights to the names, trademarks, or mascot of Claude or Anthropic.
